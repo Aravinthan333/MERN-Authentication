@@ -4,7 +4,7 @@ import {
   PASSWORD_RESET_REQUEST_TEMPLATE,
   PASSWORD_RESET_SUCCESS_TEMPLATE,
   VERIFICATION_EMAIL_TEMPLATE,
-} from "../mailtrap/emailTemplates.js";
+} from "./emailTemplates.js";
 
 dotenv.config();
 
