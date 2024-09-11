@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import {
   PASSWORD_RESET_REQUEST_TEMPLATE,
+  PASSWORD_RESET_SUCCESS_TEMPLATE,
   VERIFICATION_EMAIL_TEMPLATE,
 } from "../mailtrap/emailTemplates.js";
 
@@ -54,6 +55,19 @@ export const sendPasswordResetMail = async (to, resetURL) => {
 
 // ==================================================================================================================================================================
 
-export const sendResetSuccessEmail = async (email) => {};
+export const sendResetSuccessEmail = async (to) => {
+  try {
+    await transporter.sendMail({
+      to: to,
+      subject: "Password reset successful",
+      html: PASSWORD_RESET_SUCCESS_TEMPLATE,
+    });
+
+    console.log("Mail send");
+  } catch (error) {
+    console.log(error.message);
+    // throw new Error(error);
+  }
+};
 
 // ==================================================================================================================================================================
