@@ -1,10 +1,17 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 import { User } from "../models/user.model.js";
 import { generateToken } from "../utils/generateToken.js";
 // import { sendVerificationEmail } from "../mailtrap/emails.js";
-import { verificationMail } from "../nodemailer/nodemailer.js";
-import { VERIFICATION_EMAIL_TEMPLATE } from "../mailtrap/emailTemplates.js";
+import {
+  sendPasswordResetMail,
+  verificationMail,
+} from "../nodemailer/nodemailer.js";
+import {
+  PASSWORD_RESET_REQUEST_TEMPLATE,
+  VERIFICATION_EMAIL_TEMPLATE,
+} from "../mailtrap/emailTemplates.js";
 
 const signup = async (req, res) => {
   // console.log(req.body);
@@ -48,14 +55,7 @@ const signup = async (req, res) => {
     generateToken(res, user._id);
 
     // sendVerificationEmail(user.email, user.name, verificationToken);
-    verificationMail(
-      user.email,
-      "Verification code",
-      VERIFICATION_EMAIL_TEMPLATE.replace(
-        "{verificationCode}",
-        verificationToken
-      )
-    );
+    verificationMail(user.email, verificationToken);
 
     return res
       .status(201)
@@ -177,14 +177,33 @@ const forgotPassword = async (req, res) => {
       });
     }
 
-    const isUserexist = await User.findOne({ email });
+    const user = await User.findOne({ email });
 
-    if (!isUserexist) {
+    if (!user) {
       return res.status(400).json({
         success: false,
         message: "User not found",
       });
     }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(20).toString("hex");
+    const resetTokenExpiresAt = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
+
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpiresAt = resetTokenExpiresAt;
+
+    await user.save();
+
+    sendPasswordResetMail(
+      user.email,
+      `http://localhost:5173/reset-password/${resetToken}`
+    );
+
+    return res.status(200).send({
+      success: true,
+      message: "Password reset token sent to your email",
+    });
   } catch (error) {
     return res.status(400).json({
       success: false,
@@ -196,4 +215,17 @@ const forgotPassword = async (req, res) => {
 
 // ===========================================================================================================
 
-export { signup, login, logout, verifyEmail, forgotPassword };
+const resetPassword = async (req, res) => {
+  try {
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      from: "catch",
+      message: error.message,
+    });
+  }
+};
+
+// ===========================================================================================================
+
+export { signup, login, logout, verifyEmail, forgotPassword, resetPassword };
