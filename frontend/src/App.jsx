@@ -40,11 +40,16 @@ function App() {
 
         <Routes>
           <Route path="/" element={<DashboardPage />} />
-          <Route path="/" element={<SignUpPage />} />
-          <Route path="/" element={<LoginPage />} />
-          <Route path="/" element={<ForgotPasswordPage />} />
-          <Route path="/" element={<ResetPasswordPage />} />
-          <Route path="/" element={<EmailVerificationPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route
+            path="/reset-password/:token"
+            element={<ResetPasswordPage />}
+          />
+          <Route path="/verify-email" element={<EmailVerificationPage />} />
+
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 
         <Toaster />
