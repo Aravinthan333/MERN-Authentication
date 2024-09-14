@@ -1,24 +1,40 @@
+import axios from "axios";
 import { useState } from "react";
-import { FaEnvelope, FaLock, FaSignInAlt } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { FaLock, FaSignInAlt } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import { useAuthStore } from "../store/authStore";
 
 const EmailVerificationPage = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [code, setCode] = useState();
+  const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const { error, isLoading, verifyEmail } = useAuthStore();
 
-  const handleSubmit = (e) => {
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   // Submit the form data to backend
+  //   const response = await axios.post(
+  //     "http://localhost:3000/api/auth/verifyEmail",
+  //     { code },
+  //     { type: "application/json" }
+  //   );
+  //   if (response.status === 200) {
+  //     navigate("/login");
+  //   }
+  //   console.log(response);
+  // };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Submit the form data to backend
-    console.log(formData);
+    const verificationCode = code.join("");
+    try {
+      await verifyEmail(verificationCode);
+      navigate("/");
+      toast.success("Email verified successfully");
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -31,10 +47,10 @@ const EmailVerificationPage = () => {
           <FaLock className="absolute left-3 top-4 text-gray-400" />
           <input
             type="text"
-            name="otp"
+            name="code"
             placeholder="OTP"
-            value={formData.email}
-            onChange={handleChange}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
             required
             className="w-full p-3 pl-10 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
           />
@@ -45,8 +61,7 @@ const EmailVerificationPage = () => {
           type="submit"
           className="w-full flex items-center justify-center p-3 space-x-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
         >
-          <FaSignInAlt />
-          <span>Verify</span>
+          {isLoading ? "Verifying..." : "Verify Email"}
         </button>
       </form>
     </div>

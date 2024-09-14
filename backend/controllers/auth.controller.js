@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
 
 import { User } from "../models/user.model.js";
 import { generateToken } from "../utils/generateToken.js";
@@ -102,24 +103,26 @@ const verifyEmail = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    // console.log("req.bogy  :  ", email, password);
     if (!email || !password) {
       // throw new Error("All fields are required");
+      console.log("errorr trigger");
       return res
         .status(400)
         .json({ success: false, message: "All fields are required" });
     }
 
-    const userExists = await User.findOne({ email });
-    // console.log(useAlreadyExists);
+    const user = await User.findOne({ email });
+    // console.log("User in db", userExists);
 
-    if (!userExists) {
+    if (!user) {
       // throw new Error("User Already Registered!");
       return res
         .status(400)
         .json({ success: false, message: "User Is Not Registered!" });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, userExists.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
       return res
@@ -127,21 +130,54 @@ const login = async (req, res) => {
         .json({ success: false, message: "Invalid Password!" });
     }
 
-    generateToken(res, userExists._id);
+    // generateToken(res, userExists._id);
 
-    userExists.lastLogin = new Date();
+    const userId = user._id;
+    const tokenData = {
+      userId,
+    };
 
-    await userExists.save();
-
-    return res.status(200).json({
-      success: true,
-      message: "User logged in successfully",
-      userExists: {
-        ...userExists._doc,
-        password: undefined,
-      },
+    const token = jwt.sign(tokenData, process.env.SECRET_KEY, {
+      expiresIn: "1d",
     });
+
+    console.log("token 134", token);
+
+    // console.log("cookie token", res.cookie());
+
+    // userExists.lastLogin = new Date();
+
+    // await userExists.save();
+
+    // return res.cookie("token", token, {
+    //   httpOnly: true,
+    //   maxAge: 1000 * 60 * 60 * 24 * 7,
+    //   sameSite: "strict",
+    // });
+
+    // return res.status(200).json({
+    //   success: true,
+    //   message: "User logged in successfully",
+    //   userExists: {
+    //     ...userExists._doc,
+    //     password: undefined,
+    //   },
+    // });
+
+    return res
+      .status(200)
+      .cookie("token", token, {
+        maxAge: 1 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        sameSite: "strict",
+      })
+      .json({
+        user,
+        token,
+        success: true,
+      });
   } catch (error) {
+    throw new Error(error);
     return res.status(400).json({
       success: false,
       from: "catch",

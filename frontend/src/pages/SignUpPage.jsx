@@ -1,38 +1,26 @@
-// import { motion } from "framer-motion";
-
-// const SignUpPage = () => {
-//   return (
-//     <div
-//       className="p-10 rounded-2xl bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-xl shadow-xl
-// 			overflow-hidden"
-//     >
-//       SignUpPage
-//     </div>
-//   );
-// };
-
+import { Loader } from "lucide-react";
 import { useState } from "react";
 import { FaUser, FaEnvelope, FaLock, FaSignInAlt } from "react-icons/fa";
-import { Link } from "react-router-dom"; // If using routing for the login link
+import { Link, useNavigate } from "react-router-dom"; // If using routing for the login link
+import { useAuthStore } from "../store/authStore";
 
 const SignupPage = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const { signup, isLoading } = useAuthStore();
 
-  const handleSubmit = (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
-    // Submit the form data to backend
-    console.log(formData);
+
+    try {
+      await signup(email, password, name);
+      navigate("/verify-email");
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -40,7 +28,7 @@ const SignupPage = () => {
     <div className="w-full max-w-md p-10 space-y-8 bg-white shadow-md rounded-md">
       <h2 className="text-3xl font-bold text-center">Sign Up</h2>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSignUp}>
         {/* Name Input */}
         <div className="relative mb-4">
           <FaUser className="absolute left-3 top-4 text-gray-400" />
@@ -48,8 +36,8 @@ const SignupPage = () => {
             type="text"
             name="name"
             placeholder="Name"
-            value={formData.name}
-            onChange={handleChange}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             required
             className="w-full p-3 pl-10 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
           />
@@ -62,8 +50,8 @@ const SignupPage = () => {
             type="email"
             name="email"
             placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
             className="w-full p-3 pl-10 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
           />
@@ -76,8 +64,8 @@ const SignupPage = () => {
             type="password"
             name="password"
             placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
             className="w-full p-3 pl-10 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
           />
@@ -88,8 +76,14 @@ const SignupPage = () => {
           type="submit"
           className="w-full flex items-center justify-center p-3 space-x-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
         >
-          <FaSignInAlt />
-          <span>Sign Up</span>
+          {isLoading ? (
+            <Loader className=" animate-spin mx-auto" size={24} />
+          ) : (
+            <>
+              <FaSignInAlt />
+              <span>Sign Up</span>
+            </>
+          )}
         </button>
       </form>
 
